@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models import QuerySet, Sum, Q, DecimalField
+from django.db.models import DecimalField, Q, QuerySet, Sum
 from django.db.models.functions import Coalesce
 
 from ...constants import CategoryTypes
@@ -11,7 +11,7 @@ class TransactionQuerySet(QuerySet):
         return self.aggregate(
             total_income=Coalesce(
                 Sum(
-                    'amount',
+                    "amount",
                     filter=Q(category__category_type=CategoryTypes.INCOME),
                 ),
                 0,
@@ -19,7 +19,7 @@ class TransactionQuerySet(QuerySet):
             ),
             total_expenses=Coalesce(
                 Sum(
-                    'amount',
+                    "amount",
                     filter=Q(category__category_type=CategoryTypes.EXPENSE),
                 ),
                 0,

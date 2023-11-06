@@ -12,18 +12,20 @@ class TransactionRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Transaction
-        fields = ('id', 'category', 'transaction_date', 'amount')
+        fields = ("id", "category", "transaction_date", "amount")
 
 
 class TransactionCreateSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(queryset=TransactionCategory.objects.all())
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=TransactionCategory.objects.all()
+    )
 
     class Meta:
         model = Transaction
-        fields = ('id', 'category', 'transaction_date', 'amount')
+        fields = ("id", "category", "transaction_date", "amount")
 
     def validate_category(self, category: TransactionCategory) -> TransactionCategory:
-        user = self.context['request'].user
+        user = self.context["request"].user
 
         if category not in user.categories.all():
             raise serializers.ValidationError(TransactionErrors.NOT_USERS_CATEGORY)
@@ -31,7 +33,7 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
             return category
 
     def create(self, validated_data: dict) -> Transaction:
-        validated_data['user'] = self.context['request'].user
+        validated_data["user"] = self.context["request"].user
         return super().create(validated_data)
 
     @property
