@@ -1,7 +1,9 @@
+from calendar import month
 import os
 from pathlib import Path
 
 import dj_database_url
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).parents[2]
 SECRET_KEY = '!6xmo&@!7dzw8p6yxjnj&&1lur%4+fs!r2tuzb#6j(64s@m6)*'
@@ -129,7 +131,7 @@ AUTHENTICATED_USER_THROTTLE_RATE = os.environ.get('AUTHENTICATED_USER_THROTTLE_R
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
@@ -138,7 +140,16 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': f'{ANONYMOUS_USER_THROTTLE_RATE}/day',
         'user': f'{AUTHENTICATED_USER_THROTTLE_RATE}/day',
-    }
+    },
+}
+
+##################################################################
+# Simple JWT settings
+##################################################################
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
 
 ##################################################################

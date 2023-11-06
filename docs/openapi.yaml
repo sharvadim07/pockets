@@ -1,7 +1,7 @@
 openapi: 3.0.2
 servers:
   - description: API
-    url: http://89.108.102.170/api
+    url: http://localhost/api
 info:
   title: pockets
   version: 0.1.0
@@ -42,7 +42,19 @@ paths:
           $ref: '#/components/responses/TokenObtain200'
         '400':
           $ref: '#/components/responses/TokenObtain400'
-
+          
+  '/auth/api-token-auth/refresh':
+    post:
+      tags:
+        - auth
+      summary: "Refresh access token"
+      requestBody:
+        $ref: '#/components/requestBodies/TokenRefreshRequestBody'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenRefresh200'
+        '400':
+          $ref: '#/components/responses/TokenRefresh400'
 
   '/users/me':
     get:
@@ -399,6 +411,8 @@ components:
             properties:
               username:
                 type: string
+              email:
+                type: string
               password:
                 type: string
       required: true
@@ -486,9 +500,12 @@ components:
           schema:
             type: object
             properties:
-              token:
+              access:
                 type: string
                 description: "access token"
+              refresh:
+                type: string
+                description: "refresh token"
 
     TokenObtain400:
       description: "Bad request"
@@ -500,6 +517,17 @@ components:
               detail:
                 type: string
                 example: "No active account found with the given credentials"
+
+    TokenRefresh200:
+      description: "Success"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                description: "access token"
 
     TokenRefresh400:
       description: "Bad request"
