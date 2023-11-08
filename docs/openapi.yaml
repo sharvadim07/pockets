@@ -42,7 +42,7 @@ paths:
           $ref: '#/components/responses/TokenObtain200'
         '400':
           $ref: '#/components/responses/TokenObtain400'
-          
+
   '/auth/api-token-auth/refresh':
     post:
       tags:
@@ -369,9 +369,6 @@ components:
       properties:
         name:
           type: string
-        category_type:
-          type: string
-          enum: ["income", "expense"]
 
     CategoryBase:
       allOf:
@@ -401,6 +398,8 @@ components:
           format: date
         amount:
           $ref: '#/components/schemas/Decimal'
+        transaction_type:
+          enum: ["income", "expense"]
 
   requestBodies:
     RegistrationRequestBody:
@@ -454,6 +453,10 @@ components:
                 format: date
               amount:
                 type: number
+              transaction_type:
+                type: string
+                enum: ["income", "expense"]
+                default: "expense"
       required: true
 
     CategoryCreateRequestBody:
@@ -598,8 +601,9 @@ components:
                 type: array
                 items:
                   type: string
-                  example: "У пользователя нет такой категории"
-
+                  example:
+                    - "У пользователя нет такой категории"
+                    - "У транзакций с типом 'Доход' не может быть категории"
 
     TransactionGlobal200:
       description: "Success"
