@@ -10,7 +10,7 @@ from .transaction_category import TransactionCategorySerializer
 
 
 class TransactionRetrieveSerializer(serializers.ModelSerializer):
-    category = TransactionCategorySerializer()
+    category = TransactionCategorySerializer(required=False)
 
     class Meta:
         model = Transaction
@@ -18,11 +18,10 @@ class TransactionRetrieveSerializer(serializers.ModelSerializer):
 
 
 class TransactionCreateSerializer(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(
-        many=True,
-        slug_field="name",
+    category = serializers.PrimaryKeyRelatedField(
         queryset=TransactionCategory.objects.all(),
         allow_null=True,
+        required=False,
     )
 
     class Meta:
@@ -30,7 +29,7 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         fields = ("id", "category", "transaction_date", "amount", "transaction_type")
 
     def validate(self, attrs):
-        if attrs["transaction_type"] == TransactionTypes.INCOME:
+        if attrs["transaction_type"] == TransactionTypes.INCOME and "category" in attrs:
             raise serializers.ValidationError(
                 TransactionCategoryErrors.INCOME_TYPE_OF_TRANSACTION
             )
