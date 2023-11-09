@@ -3,7 +3,6 @@ from collections import OrderedDict
 from rest_framework import serializers
 
 from ..constants import TransactionErrors
-from ..constants.errors import TransactionCategoryErrors
 from ..constants.transaction import TransactionTypes
 from ..models import Transaction, TransactionCategory
 from .transaction_category import TransactionCategorySerializer
@@ -29,20 +28,28 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         fields = ("id", "category", "transaction_date", "amount", "transaction_type")
 
     def validate(self, attrs):
-        if attrs["transaction_type"] == TransactionTypes.INCOME and "category" in attrs:
+        if (
+            attrs["transaction_type"] == TransactionTypes.EXPENSE
+            and "category" not in attrs
+        ):
             raise serializers.ValidationError(
-                TransactionCategoryErrors.INCOME_TYPE_OF_TRANSACTION
+                TransactionErrors.EXPENSE_TYPE_OF_TRANSACTION_WITHOUT_CATEGORY
             )
+        elif (
+            attrs["transaction_type"] == TransactionTypes.INCOME and "category" in attrs
+        ):
+            raise serializers.ValidationError(
+                TransactionErrors.INCOME_TYPE_OF_TRANSACTION_WITH_CATEGORY
+            )
+        elif "category" in attrs:
+            self.validate_category(attrs["category"])
         else:
             return attrs
 
-    def validate_category(self, category: TransactionCategory) -> TransactionCategory:
+    def validate_category(self, category: TransactionCategory) -> None:
         user = self.context["request"].user
-        print("validate_category")
         if category not in user.categories.all():
             raise serializers.ValidationError(TransactionErrors.NOT_USERS_CATEGORY)
-        else:
-            return category
 
     def create(self, validated_data: dict) -> Transaction:
         validated_data["user"] = self.context["request"].user
