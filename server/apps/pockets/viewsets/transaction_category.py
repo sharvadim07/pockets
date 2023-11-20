@@ -30,14 +30,12 @@ class TransactionCategoryViewSet(
     def get_queryset(self) -> QuerySet:
         queryset = TransactionCategory.objects.filter(
             user=self.request.user,
-        ).order_by(
-            "-id",
         )
 
-        if self.action == "transactions_by_categories":
+        if self.action == "list":
             queryset = queryset.annotate_with_transaction_sums()
 
-        return queryset
+        return queryset.order_by("-transactions_sum")
 
     @action(methods=("GET",), detail=False, url_path="transactions-by-categories")
     def transactions_by_categories(self, request: Request, *args, **kwargs) -> Response:
