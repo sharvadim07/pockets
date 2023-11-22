@@ -69,67 +69,24 @@ paths:
         - pockets
         - transactions
       summary: Transactions list
-      security:
-        - bearerAuth: []
       parameters:
-        - in: query
-          name: limit
-          schema:
-            type: number
-          required: false
-        - in: query
-          name: offset
-          schema:
-            type: number
-          required: false
-        - in: query
-          name: category
-          schema:
-            type: number
-          description: Filtering by category of transactions
-          required: false
-        - in: query
-          name: year
-          schema:
-            type: number
-          description: Filtering by year of transactions date (exact)
-          required: false
-        - in: query
-          name: year__lt
-          schema:
-            type: number
-          description: Filtering by year of transactions date (lower than)
-          required: false
-        - in: query
-          name: year__gt
-          schema:
-            type: number
-          description: Filtering by year of transactions date (greater than)
-          required: false
-        - in: query
-          name: month
-          schema:
-            type: number
-          description: Filtering by month of transactions date (exact)
-          required: false
-        - in: query
-          name: month__lt
-          schema:
-            type: number
-          description: Filtering by month of transactions date (lower than)
-          required: false
-        - in: query
-          name: month__gt
-          schema:
-            type: number
-          description: Filtering by month of transactions date (greater than)
-          required: false
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/Category'
+        - $ref: '#/components/parameters/Year'
+        - $ref: '#/components/parameters/Year__gt'
+        - $ref: '#/components/parameters/Year__lt'
+        - $ref: '#/components/parameters/Month'
+        - $ref: '#/components/parameters/Month__gt'
+        - $ref: '#/components/parameters/Month__lt'
         - in: query
           name: order_by
           schema:
             type: string
           description: Ordering by "category" name, "date" or "amount" of transactions
           required: false
+      security:
+        - bearerAuth: []
       responses:
         '200':
           $ref: '#/components/responses/TransactionsList200'
@@ -246,11 +203,44 @@ paths:
         - pockets
         - transactions
       summary: Transactions global
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/Category'
+        - $ref: '#/components/parameters/Year'
+        - $ref: '#/components/parameters/Year__gt'
+        - $ref: '#/components/parameters/Year__lt'
+        - $ref: '#/components/parameters/Month'
+        - $ref: '#/components/parameters/Month__gt'
+        - $ref: '#/components/parameters/Month__lt'
       security:
         - bearerAuth: []
       responses:
         '200':
           $ref: '#/components/responses/TransactionGlobal200'
+        '401':
+          description: Unauthorized
+  /pockets/transactions/balance/:
+    get:
+      tags:
+        - pockets
+        - transactions
+      summary: Transactions global
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/Category'
+        - $ref: '#/components/parameters/Year'
+        - $ref: '#/components/parameters/Year__gt'
+        - $ref: '#/components/parameters/Year__lt'
+        - $ref: '#/components/parameters/Month'
+        - $ref: '#/components/parameters/Month__gt'
+        - $ref: '#/components/parameters/Month__lt'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/TransactionBalance200'
         '401':
           description: Unauthorized
   /pockets/categories/:
@@ -268,21 +258,11 @@ paths:
           description: Unauthorized
       parameters:
         - in: query
-          name: limit
-          schema:
-            type: number
-          required: false
-        - in: query
-          name: offset
-          schema:
-            type: number
-          required: false
-        - in: query
           name: order_by
           schema:
             type: string
           description: Ordering by "transactions_expense_sum"
-
+          required: false
     post:
       tags:
         - pockets
@@ -300,6 +280,74 @@ paths:
         '401':
           description: Unauthorized
 components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: number
+      required: false
+    Offset:
+      in: query
+      name: offset
+      schema:
+        type: number
+      required: false
+    Category:
+      in: query
+      name: category
+      schema:
+        type: number
+      description: Filtering by category of transactions
+      required: false
+    Year:
+      in: query
+      name: year
+      schema:
+        type: number
+      description: Filtering by year of transactions date (exact)
+      required: false
+    Year__lt:
+      in: query
+      name: year__lt
+      schema:
+        type: number
+      description: Filtering by year of transactions date (lower than)
+      required: false
+    Year__gt:
+      in: query
+      name: year__gt
+      schema:
+        type: number
+      description: Filtering by year of transactions date (greater than)
+      required: false
+    Month:
+      in: query
+      name: month
+      schema:
+        type: number
+        minimum: 1
+        maximum: 12
+      description: Filtering by month of transactions date (exact)
+      required: false
+    Month__lt:
+      in: query
+      name: month__lt
+      schema:
+        type: number
+        minimum: 1
+        maximum: 12
+      description: Filtering by month of transactions date (lower than)
+      required: false
+    Month__gt:
+      in: query
+      name: month__gt
+      schema:
+        type: number
+        minimum: 1
+        maximum: 12
+      description: Filtering by month of transactions date (greater than)
+      required: false
   securitySchemes:
     bearerAuth:
       type: http
@@ -546,6 +594,15 @@ components:
               total_income:
                 $ref: '#/components/schemas/Decimal'
               total_expenses:
+                $ref: '#/components/schemas/Decimal'
+    TransactionBalance200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              balance:
                 $ref: '#/components/schemas/Decimal'
     CategoriesList200:
       description: Success
