@@ -225,7 +225,7 @@ paths:
       tags:
         - pockets
         - transactions
-      summary: Transactions global
+      summary: Transactions balance
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Offset'
@@ -277,6 +277,19 @@ paths:
           $ref: '#/components/responses/CategoriesList200'
         '400':
           $ref: '#/components/responses/CategoryCreate400'
+        '401':
+          description: Unauthorized
+  /pockets/categories/top_expense/:
+    get:
+      tags:
+        - pockets
+        - categories
+      summary: Categories list with top expense transactions sum
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoriesWithExpensesList200'
         '401':
           description: Unauthorized
 components:
@@ -371,10 +384,11 @@ components:
         - $ref: '#/components/schemas/CategoryCreate'
     CategoryWithExpensesSums:
       allOf:
-        - $ref: '#/components/schemas/CategoryBase'
         - type: object
           properties:
-            transactions_sum:
+            name:
+              type: string
+            transactions_expense_sum:
               $ref: '#/components/schemas/Decimal'
     TransactionRetrieve:
       type: object

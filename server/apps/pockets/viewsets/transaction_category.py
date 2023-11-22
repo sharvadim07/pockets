@@ -11,7 +11,7 @@ from ..filters import TransactionCategoryFilter
 from ..models import TransactionCategory
 from ..serializers import (
     TransactionCategorySerializer,
-    TransactionCategoryTransactionSumSerializer,
+    TransactionCategoryTopExpenseCategory,
 )
 
 
@@ -22,8 +22,8 @@ class TransactionCategoryViewSet(
     filterset_class = TransactionCategoryFilter
 
     def get_serializer_class(self) -> Type[serializers.ModelSerializer]:
-        if self.action == "transactions_by_categories":
-            serializer_class = TransactionCategoryTransactionSumSerializer
+        if self.action == "top_expense":
+            serializer_class = TransactionCategoryTopExpenseCategory
         else:
             serializer_class = TransactionCategorySerializer
 
@@ -33,14 +33,38 @@ class TransactionCategoryViewSet(
         queryset = TransactionCategory.objects.filter(
             user=self.request.user,
         )
-
         if self.action == "list":
             queryset = (
                 queryset.annotate_with_transaction_sums().annotate_with_transaction_expense_sums()
             )
+            queryset = queryset.order_by("-transactions_sum")
+        elif self.action == "top_expense":
+            queryset = queryset.annotate_with_transaction_expense_sums()
+            queryset = queryset.order_by("-transactions_expense_sum")
+        return queryset
 
-        return queryset.order_by("-transactions_sum")
+    def get_top_expense_categories(self, categories, num=3):
+        sorted_categories = sorted(
+            categories, key=lambda v: v["transactions_expense_sum"], reverse=True
+        )
+        top_expense_categories = sorted_categories[:num]
+        other_categories = sorted_categories[num:]
+        other_categories_expense_sum = sum(
+            float(category["transactions_expense_sum"]) for category in other_categories
+        )
+        top_expense_categories.append(
+            {
+                "name": "Другое",
+                "transactions_expense_sum": f"{other_categories_expense_sum:.2f}",
+            }
+        )
+        return top_expense_categories
 
-    @action(methods=("GET",), detail=False, url_path="transactions-by-categories")
-    def transactions_by_categories(self, request: Request, *args, **kwargs) -> Response:
-        return super().list(request, *args, **kwargs)
+    @action(methods=("GET",), detail=False, url_path="top_expense")
+    def top_expense(self, request: Request, *args, **kwargs) -> Response:
+        response = super().list(request, *args, **kwargs)
+        top_expense_categories = self.get_top_expense_categories(
+            categories=response.data
+        )
+        response.data = top_expense_categories
+        return response
