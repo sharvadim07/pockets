@@ -142,6 +142,7 @@ REST_FRAMEWORK = {
         "anon": f"{ANONYMOUS_USER_THROTTLE_RATE}/day",
         "user": f"{AUTHENTICATED_USER_THROTTLE_RATE}/day",
     },
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
 
 ##################################################################
