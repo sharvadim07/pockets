@@ -20,6 +20,15 @@ class TransactionFilter(filters.FilterSet):
         field_name="transaction_date", lookup_expr="month__lt"
     )
 
+    order_by = filters.OrderingFilter(
+        fields=(
+            ("category__name", "category"),
+            ("transaction_date", "date"),
+            ("amount", "amount"),
+            # Add more fields for ordering as needed
+        ),
+    )
+
     class Meta:
         model = Transaction
         fields = [
@@ -30,4 +39,5 @@ class TransactionFilter(filters.FilterSet):
             "month",
             "month__gt",
             "month__lt",
+            "order_by",
         ]

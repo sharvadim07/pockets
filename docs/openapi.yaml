@@ -124,6 +124,12 @@ paths:
             type: number
           description: Filtering by month of transactions date (greater than)
           required: false
+        - in: query
+          name: order_by
+          schema:
+            type: string
+          description: Ordering by "category" name, "date" or "amount" of transaction
+          required: false
       responses:
         '200':
           $ref: '#/components/responses/TransactionsList200'

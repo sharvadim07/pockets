@@ -28,9 +28,8 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         fields = ("id", "category", "transaction_date", "amount", "transaction_type")
 
     def validate(self, attrs):
-        if (
-            attrs["transaction_type"] == TransactionTypes.EXPENSE
-            and "category" not in attrs
+        if attrs["transaction_type"] == TransactionTypes.EXPENSE and (
+            "category" not in attrs or attrs["category"] is None
         ):
             raise serializers.ValidationError(
                 TransactionErrors.EXPENSE_TYPE_OF_TRANSACTION_WITHOUT_CATEGORY
@@ -41,15 +40,14 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 TransactionErrors.INCOME_TYPE_OF_TRANSACTION_WITH_CATEGORY
             )
-        elif "category" in attrs:
-            self.validate_category(attrs["category"])
         else:
             return attrs
 
-    def validate_category(self, category: TransactionCategory) -> None:
+    def validate_category(self, category: TransactionCategory) -> TransactionCategory:
         user = self.context["request"].user
         if category not in user.categories.all():
             raise serializers.ValidationError(TransactionErrors.NOT_USERS_CATEGORY)
+        return category
 
     def create(self, validated_data: dict) -> Transaction:
         validated_data["user"] = self.context["request"].user
