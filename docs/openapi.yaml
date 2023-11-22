@@ -128,7 +128,7 @@ paths:
           name: order_by
           schema:
             type: string
-          description: Ordering by "category" name, "date" or "amount" of transaction
+          description: Ordering by "category" name, "date" or "amount" of transactions
           required: false
       responses:
         '200':
@@ -266,6 +266,23 @@ paths:
           $ref: '#/components/responses/CategoriesList200'
         '401':
           description: Unauthorized
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: number
+          required: false
+        - in: query
+          name: offset
+          schema:
+            type: number
+          required: false
+        - in: query
+          name: order_by
+          schema:
+            type: string
+          description: Ordering by "transactions_expense_sum"
+
     post:
       tags:
         - pockets
