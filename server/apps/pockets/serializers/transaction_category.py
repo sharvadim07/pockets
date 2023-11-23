@@ -7,19 +7,20 @@ from ..models import TransactionCategory
 class TransactionCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionCategory
-        fields = ("id", "name", "category_type")
+        fields = (
+            "id",
+            "name",
+        )
 
     def validate(self, attrs: dict) -> dict:
         user = self.context["request"].user
         name = attrs["name"]
-        category_type = attrs["category_type"]
         excludes = {"id": self.instance.id} if self.instance else {}
 
         if (
             TransactionCategory.objects.filter(
                 user=user,
                 name=name,
-                category_type=category_type,
             )
             .exclude(
                 **excludes,
@@ -37,9 +38,9 @@ class TransactionCategorySerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class TransactionCategoryTransactionSumSerializer(serializers.ModelSerializer):
-    transactions_sum = serializers.DecimalField(max_digits=10, decimal_places=2)
+class TransactionCategoryTopExpenseCategory(serializers.ModelSerializer):
+    transactions_expense_sum = serializers.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
         model = TransactionCategory
-        fields = ("id", "name", "category_type", "transactions_sum")
+        fields = ("name", "transactions_expense_sum")
