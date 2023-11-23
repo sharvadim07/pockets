@@ -33,14 +33,8 @@ class TransactionCategoryViewSet(
         queryset = TransactionCategory.objects.filter(
             user=self.request.user,
         )
-        if self.action == "list":
-            queryset = (
-                queryset.annotate_with_transaction_sums().annotate_with_transaction_expense_sums()
-            )
-            queryset = queryset.order_by("-transactions_sum")
-        elif self.action == "top_expense":
-            queryset = queryset.annotate_with_transaction_expense_sums()
-            queryset = queryset.order_by("-transactions_expense_sum")
+        queryset = queryset.annotate_with_transaction_expense_sums()
+        queryset = queryset.order_by("-transactions_expense_sum")
         return queryset
 
     def get_top_expense_categories(self, categories, num=3):
