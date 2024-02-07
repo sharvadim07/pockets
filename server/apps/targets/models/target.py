@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -24,8 +27,10 @@ class TargetModel(models.Model):
     )
     start_amount: models.DecimalField = models.DecimalField(
         verbose_name="Начальная сумма",
-        default=0,
-    )
+        max_digits=10,
+        decimal_places=2,
+        validators=(MinValueValidator(Decimal("0.01")),),
+    )  # type: ignore
     end_amount: models.DecimalField = models.DecimalField(
         verbose_name="Сколько хотите накопить",
     )
