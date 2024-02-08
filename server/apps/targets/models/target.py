@@ -1,10 +1,10 @@
 from decimal import Decimal
 
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
-class TargetModel(models.Model):
+class Target(models.Model):
     user: models.ForeignKey = models.ForeignKey(
         to="users.User",
         on_delete=models.CASCADE,
@@ -33,12 +33,19 @@ class TargetModel(models.Model):
     )  # type: ignore
     end_amount: models.DecimalField = models.DecimalField(
         verbose_name="Сколько хотите накопить",
+        max_digits=10,
+        decimal_places=2,
+        validators=(MinValueValidator(Decimal("0.01")),),
     )
-    term: models.DecimalField = models.DecimalField(
+    term: models.IntegerField = models.IntegerField(
         verbose_name="Срок (месяцы)",
+        validators=(MinValueValidator(Decimal("1")), MaxValueValidator(Decimal("12"))),
     )
     increase_percent: models.DecimalField = models.DecimalField(
         verbose_name="Процент",
+        max_digits=10,
+        decimal_places=2,
+        validators=(MinValueValidator(Decimal("0.01")),),
     )
 
     class Meta:
