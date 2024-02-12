@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -40,7 +40,7 @@ class Target(models.Model):
     )
     term: models.IntegerField = models.IntegerField(
         verbose_name="Срок (месяцы)",
-        validators=(MinValueValidator(Decimal("1")), MaxValueValidator(Decimal("12"))),
+        validators=(MinValueValidator(Decimal("1")),),
     )
     increase_percent: models.DecimalField = models.DecimalField(
         verbose_name="Процент",

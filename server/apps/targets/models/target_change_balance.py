@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 
-class TargetChangeBalanceModel(models.Model):
+class TargetChangeBalance(models.Model):
     target: models.ForeignKey = models.ForeignKey(
         to="targets.Target",
         on_delete=models.CASCADE,
