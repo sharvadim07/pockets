@@ -53,4 +53,4 @@ class Target(models.Model):
         verbose_name_plural = "Цели"
 
     def __str__(self):
-        return f"{self.name} {self.category}"
+        return f"Target {self.name} of {self.category}"
