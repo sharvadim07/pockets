@@ -14,6 +14,10 @@ tags:
     description: Pockets namespace
   - name: transactions
   - name: categories
+  - name: targets
+    description: Targets namespace
+  - name: targets
+  - name: target_changes_balance
 paths:
   /auth/register/:
     post:
@@ -292,6 +296,80 @@ paths:
           $ref: '#/components/responses/CategoriesWithExpensesList200'
         '401':
           description: Unauthorized
+  /targets/targets/:
+    get:
+      tags:
+        - targets
+        - targets
+      summary: Targets list
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - in: query
+          name: order_by
+          schema:
+            type: string
+          required: false
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/TargetsList200'
+        '401':
+          description: Unauthorized
+    post:
+      tags:
+        - targets
+        - targets
+      summary: Target Create
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: '#/components/requestBodies/TargetCreateRequestBody'
+      responses:
+        '200':
+          $ref: '#/components/responses/Targets200'
+        '400':
+          $ref: '#/components/responses/TargetCreate400'
+        '401':
+          description: Unauthorized
+  /targets/target_changes_balance/:
+    get:
+      tags:
+        - targets
+        - target_changes_balance
+      summary: Changes of target balance list
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - in: query
+          name: order_by
+          schema:
+            type: string
+          required: false
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/TargetChangesBalanceList200'
+        '401':
+          description: Unauthorized
+    post:
+      tags:
+        - targets
+        - targets
+      summary: Target Create
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: '#/components/requestBodies/TargetChangeBalanceCreateRequestBody'
+      responses:
+        '200':
+          $ref: '#/components/responses/TargetChangesBalance200'
+        '400':
+          $ref: '#/components/responses/TargetChangeBalanceCreate400'
+        '401':
+          description: Unauthorized
 components:
   parameters:
     Limit:
@@ -381,7 +459,29 @@ components:
           properties:
             id:
               type: number
-        - $ref: '#/components/schemas/CategoryCreate'
+    TargetCreate:
+      type: object
+      properties:
+        category:
+          $ref: '#/components/schemas/CategoryBase'
+        name:
+          type: string
+          format: string
+        start_amount:
+          $ref: '#/components/schemas/Decimal'
+        end_amount:
+          $ref: '#/components/schemas/Decimal'
+        increase_percent:
+          $ref: '#/components/schemas/Decimal'
+        term:
+          type: integer
+          format: integer
+    TargetBase:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: number
     CategoryWithExpensesSums:
       allOf:
         - type: object
@@ -406,6 +506,37 @@ components:
           enum:
             - income
             - expense
+    TargetRetrieve:
+      type: object
+      properties:
+        id:
+          type: number
+        category:
+          $ref: '#/components/schemas/CategoryBase'
+        name:
+          type: string
+          format: string
+        start_amount:
+          $ref: '#/components/schemas/Decimal'
+        end_amount:
+          $ref: '#/components/schemas/Decimal'
+        increase_percent:
+          $ref: '#/components/schemas/Decimal'
+        term:
+          type: integer
+          format: integer
+    TargetChangeBalanceRetrieve:
+      type: object
+      properties:
+        id:
+          type: number
+        target:
+          $ref: '#/components/schemas/TargetBase'
+        amount:
+          $ref: '#/components/schemas/Decimal'
+        date:
+          type: string
+
   requestBodies:
     RegistrationRequestBody:
       content:
@@ -448,8 +579,7 @@ components:
             type: object
             properties:
               category:
-                type: number
-                description: category id
+                $ref: '#/components/schemas/CategoryBase'
               transaction_date:
                 type: string
                 format: date
@@ -467,6 +597,25 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/CategoryCreate'
+    TargetCreateRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TargetCreate'
+      required: true
+    TargetChangeBalanceCreateRequestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              target:
+                $ref: '#/components/schemas/TargetBase'
+              amount:
+                $ref: '#/components/schemas/Decimal'
+              date:
+                type: string
+      required: true
   responses:
     Registration201:
       description: Created
@@ -659,3 +808,94 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/CategoryWithExpensesSums'
+    TargetsList200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              count:
+                type: number
+              next:
+                type: string
+                format: uri
+                nullable: true
+              previous:
+                type: string
+                format: uri
+                nullable: true
+              result:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TargetRetrieve'
+    Targets200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TargetRetrieve'
+    TargetCreate400:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              term:
+                type: integer
+                example: Убедитесь, что это значение от 1 до 12.
+              increase_percent:
+                type: number
+                example: Убедитесь, что это значение больше либо равно 0.01.
+              start_amount:
+                type: number
+                example: Убедитесь, что это значение больше либо равно 0.01.
+              end_amount:
+                type: number
+                example: Убедитесь, что это значение больше либо равно 0.01.
+              category:
+                type: array
+                items:
+                  type: string
+                  example:
+                    - У пользователя нет такой категории
+                    - У транзакций с типом 'Доход' не может быть категории
+                    - У транзакций с типом 'Расход' должна быть категория
+    TargetChangesBalanceList200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              count:
+                type: number
+              next:
+                type: string
+                format: uri
+                nullable: true
+              previous:
+                type: string
+                format: uri
+                nullable: true
+              result:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TargetChangeBalanceRetrieve'
+    TargetChangesBalance200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TargetChangeBalanceRetrieve'
+    TargetChangeBalanceCreate400:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              amount:
+                type: number
+                example: Убедитесь, что это значение больше либо равно 0.01.
