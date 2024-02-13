@@ -30,3 +30,13 @@ def create_income_transaction_now(
     transaction.transaction_date = datetime.now()
     transaction.transaction_type = TransactionTypes.INCOME
     return transaction
+
+
+def get_user_balance(user: User) -> Decimal:
+    balance = Decimal("0.0")
+    transaction_queryset = Transaction.objects.filter(
+        user=user,
+    )
+    if transaction_queryset.exists():
+        balance = transaction_queryset.get_balance()["balance"]
+    return balance

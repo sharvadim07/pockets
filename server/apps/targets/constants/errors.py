@@ -6,3 +6,4 @@ class TargetErrors:
     NOT_ENOUGH_BALANCE: Final[
         str
     ] = "Недостаточный баланс для создания цели с такой стартовой суммой"
+    END_AMOUNT_LOWER_THAN_BALANCE: Final[str] = "Целевая сумма меньше чем баланс цели"

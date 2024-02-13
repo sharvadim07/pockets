@@ -29,8 +29,8 @@ class Target(models.Model):
         verbose_name="Начальная сумма",
         max_digits=10,
         decimal_places=2,
-        validators=(MinValueValidator(Decimal("0.01")),),
-        default=Decimal("0"),
+        validators=(MinValueValidator(Decimal("0.0")),),
+        default=Decimal("0.0"),
     )  # type: ignore
     end_amount: models.DecimalField = models.DecimalField(
         verbose_name="Сколько хотите накопить",

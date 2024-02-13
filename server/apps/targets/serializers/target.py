@@ -1,12 +1,17 @@
 from decimal import Decimal
 
 from apps.pockets.constants import TransactionErrors
-from apps.pockets.logic.transaction import create_expense_transaction_now
+from apps.pockets.logic.transaction import (
+    create_expense_transaction_now,
+    get_user_balance,
+)
 from apps.pockets.models import TransactionCategory
-from apps.pockets.models.transaction import Transaction
 from apps.pockets.serializers import TransactionCategorySerializer
 from apps.targets.constants.errors import TargetErrors
-from apps.targets.logic.target_change_balance import create_change_balance_now
+from apps.targets.logic.target_change_balance import (
+    create_change_balance_now,
+    get_target_balance,
+)
 from apps.targets.models.target import Target
 from rest_framework import serializers
 from rest_framework.fields import Field
@@ -56,14 +61,17 @@ class TargetCreateSerializer(serializers.ModelSerializer):
 
     def validate_start_amount(self, start_amount: Decimal) -> Decimal:
         user = self.context["request"].user
-        if start_amount > 0:
-            transaction_queryset = Transaction.objects.filter(
-                user=user,
-            )
-            balance = transaction_queryset.get_balance()
-            if balance["balance"] < start_amount:
-                raise serializers.ValidationError(TargetErrors.NOT_ENOUGH_BALANCE)
+        if start_amount > 0 and get_user_balance(user) < start_amount:
+            raise serializers.ValidationError(TargetErrors.NOT_ENOUGH_BALANCE)
         return start_amount
+
+    def validate_end_amount(self, end_amount: Decimal) -> Decimal:
+        target = self.instance
+        if target and get_target_balance(target) > end_amount:
+            raise serializers.ValidationError(
+                TargetErrors.END_AMOUNT_LOWER_THAN_BALANCE
+            )
+        return end_amount
 
     def validate_category(self, category: TransactionCategory) -> TransactionCategory:
         user = self.context["request"].user
