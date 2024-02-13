@@ -3,6 +3,8 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from ..models.managers.target_change_balance import TargetChangeBalanceManager
+
 
 class TargetChangeBalance(models.Model):
     target: models.ForeignKey = models.ForeignKey(
@@ -20,6 +22,8 @@ class TargetChangeBalance(models.Model):
     date: models.DateField = models.DateField(
         verbose_name="Дата изменения баланса",
     )
+
+    objects = TargetChangeBalanceManager()
 
     class Meta:
         verbose_name = "Изменние баланса цели"
