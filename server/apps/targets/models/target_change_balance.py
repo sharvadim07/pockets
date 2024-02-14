@@ -21,6 +21,7 @@ class TargetChangeBalance(models.Model):
     )
     date: models.DateField = models.DateField(
         verbose_name="Дата изменения баланса",
+        blank=True,
     )
 
     objects = TargetChangeBalanceManager()

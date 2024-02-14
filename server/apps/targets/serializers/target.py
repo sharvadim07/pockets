@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 from apps.pockets.constants import TransactionErrors
@@ -13,6 +14,7 @@ from apps.targets.logic.target_change_balance import (
     get_target_balance,
 )
 from apps.targets.models.target import Target
+from dateutil.relativedelta import relativedelta
 from rest_framework import serializers
 from rest_framework.fields import Field
 
@@ -30,6 +32,8 @@ class TargetRetrieveSerializer(serializers.ModelSerializer):
             "end_amount",
             "term",
             "increase_percent",
+            "start_date",
+            "end_date",
         )
 
 
@@ -80,19 +84,26 @@ class TargetCreateSerializer(serializers.ModelSerializer):
         return category
 
     def create(self, validated_data: dict) -> Target:
-        validated_data["user"] = self.context["request"].user
-        user = validated_data["user"]
-        start_amount = validated_data["start_amount"]
-        category = validated_data["category"] if "category" in validated_data else None
+        user = self.context["request"].user
+        validated_data["user"] = user
+
+        # Set start and end dates for target
+        if "start_date" not in validated_data:
+            validated_data["start_date"] = date.today()
+        validated_data["end_date"] = validated_data["start_date"] + relativedelta(
+            months=+validated_data["term"],
+        )
+
+        target = super().create(validated_data)
+
         transaction = create_expense_transaction_now(
             user=user,
-            category=category,
-            amount=start_amount,
+            category=target.category,
+            amount=target.start_amount,
         )
-        target = super().create(validated_data)
         change_balance = create_change_balance_now(
             target=target,
-            amount=start_amount,
+            amount=target.start_amount,
         )
         transaction.save()
         change_balance.save()

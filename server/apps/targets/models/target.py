@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from apps.targets.models.managers.target import TargetManager
 from django.core.validators import MinValueValidator
 from django.db import models
 
@@ -48,6 +49,14 @@ class Target(models.Model):
         decimal_places=2,
         validators=(MinValueValidator(Decimal("0.01")),),
     )
+    start_date: models.DateField = models.DateField(
+        verbose_name="Дата создания цели",
+    )
+    end_date: models.DateField = models.DateField(
+        verbose_name="Дата завершения цели",
+    )
+
+    objects = TargetManager()
 
     class Meta:
         verbose_name = "Цель"

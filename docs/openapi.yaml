@@ -305,10 +305,14 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/Category'
+        - $ref: '#/components/parameters/Start_date'
+        - $ref: '#/components/parameters/End_date'
         - in: query
           name: order_by
           schema:
             type: string
+          description: Ordering by "category" name, "start_date", "end_date", "start_amount", "end_amount" or "increase_percent" of targets
           required: false
       security:
         - bearerAuth: []
@@ -439,6 +443,19 @@ components:
         maximum: 12
       description: Filtering by month of transactions date (greater than)
       required: false
+    Start_date:
+      in: query
+      name: start_date
+      schema:
+        type: string
+      description: Filtering by start_date of targets
+    End_date:
+      in: query
+      name: end_date
+      schema:
+        type: string
+      description: Filtering by end_date of targets
+      required: false
   securitySchemes:
     bearerAuth:
       type: http
@@ -459,6 +476,9 @@ components:
           properties:
             id:
               type: number
+            name:
+              type: string
+              example: "Food"
     TargetCreate:
       type: object
       properties:
@@ -475,7 +495,8 @@ components:
           $ref: '#/components/schemas/Decimal'
         term:
           type: integer
-          format: integer
+          format: months
+          example: '12'
     TargetBase:
       allOf:
         - type: object
@@ -516,6 +537,7 @@ components:
         name:
           type: string
           format: string
+          example: "Buy a new car"
         start_amount:
           $ref: '#/components/schemas/Decimal'
         end_amount:
@@ -524,18 +546,29 @@ components:
           $ref: '#/components/schemas/Decimal'
         term:
           type: integer
-          format: integer
+          format: months
+          example: "12"
+        start_date:
+          type: string
+          format: "yyyy-mm-dd"
+          example: "2024-02-14"
+        end_date:
+          type: string
+          format: "yyyy-mm-dd"
+          example: "2024-02-14"
     TargetChangeBalanceRetrieve:
       type: object
       properties:
         id:
           type: number
         target:
-          $ref: '#/components/schemas/TargetBase'
+          $ref: '#/components/schemas/TargetRetrieve'
         amount:
           $ref: '#/components/schemas/Decimal'
         date:
           type: string
+          format: "yyyy-mm-dd"
+          example: "2024-02-14"
 
   requestBodies:
     RegistrationRequestBody:

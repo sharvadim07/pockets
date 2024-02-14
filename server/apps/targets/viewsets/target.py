@@ -1,6 +1,8 @@
 from typing import Any
 
 from apps.pockets.logic.transaction import create_income_transaction_now
+from apps.targets.filters.target import TargetFilter
+from apps.targets.models.querysets.target import TargetQuerySet
 from apps.targets.models.target import Target
 from apps.targets.serializers.target import (
     TargetCreateSerializer,
@@ -16,7 +18,20 @@ class TargetViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.LimitOffsetPagination
     pagination_class.default_limit = 20
     permission_classes = (IsAuthenticated,)
-    queryset = Target.objects.all()
+    filterset_class = TargetFilter
+
+    def get_queryset(self) -> TargetQuerySet:
+        return (
+            Target.objects.filter(
+                user=self.request.user,
+            )
+            .select_related(
+                "category",
+            )
+            .order_by(
+                "-start_date",
+            )
+        )
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
