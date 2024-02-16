@@ -108,7 +108,7 @@ if not DEBUG:
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR.joinpath("staticfiles")
-STATICFILES_DIRS = ("static",)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
@@ -150,7 +150,7 @@ REST_FRAMEWORK = {
 ##################################################################
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=360),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
 
