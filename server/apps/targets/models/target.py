@@ -37,7 +37,7 @@ class Target(models.Model):
         verbose_name="Сколько хотите накопить",
         max_digits=10,
         decimal_places=2,
-        validators=(MinValueValidator(Decimal("0.01")),),
+        validators=(MinValueValidator(Decimal("0.0")),),
     )
     term: models.IntegerField = models.IntegerField(
         verbose_name="Срок (месяцы)",
@@ -47,7 +47,7 @@ class Target(models.Model):
         verbose_name="Процент",
         max_digits=10,
         decimal_places=2,
-        validators=(MinValueValidator(Decimal("0.01")),),
+        validators=(MinValueValidator(Decimal("0.0")),),
     )
     start_date: models.DateField = models.DateField(
         verbose_name="Дата создания цели",
