@@ -1,18 +1,23 @@
+from decimal import Decimal
 from typing import Any
 
 from apps.pockets.logic.transaction import (
     create_expense_transaction_now,
     create_income_transaction_now,
 )
+from apps.pockets.models.transaction import Transaction
 from apps.targets.filters.target import TargetFilter
 from apps.targets.logic.target_change_balance import create_change_balance_now
 from apps.targets.models.querysets.target import TargetQuerySet
 from apps.targets.models.target import Target
+from apps.targets.models.target_change_balance import TargetChangeBalance
 from apps.targets.serializers.target import (
     TargetCreateSerializer,
+    TargetFinishSerializer,
     TargetRetrieveSerializer,
     TargetTopUpSerializer,
 )
+from apps.users.models.user import User
 from rest_framework import pagination, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -47,11 +52,13 @@ class TargetViewSet(viewsets.ModelViewSet):
         return serializer_class
 
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        user = request.user
+        user: User = request.user
         # Check target balance an if it is lower than end amount
         # then create income transaction
-        target = self.get_object()
-        target_balance = target.changes_balance.get_queryset().get_balance()["balance"]
+        target: Target = self.get_object()
+        target_balance: Decimal = target.changes_balance.get_queryset().get_balance()[
+            "balance"
+        ]
         if target_balance < target.end_amount:
             new_transaction = create_income_transaction_now(
                 user=user,
@@ -62,13 +69,13 @@ class TargetViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     def perform_create(self, serializer) -> None:
-        target = serializer.save()
-        transaction = create_expense_transaction_now(
+        target: Target = serializer.save()
+        transaction: Transaction = create_expense_transaction_now(
             user=target.user,
             category=target.category,
             amount=target.start_amount,
         )
-        change_balance = create_change_balance_now(
+        change_balance: TargetChangeBalance = create_change_balance_now(
             target=target,
             amount=target.start_amount,
         )
@@ -77,9 +84,11 @@ class TargetViewSet(viewsets.ModelViewSet):
 
     @action(methods=("PATCH",), detail=True, url_path="topup")
     def topup(self, request: Request, *args, **kwargs) -> Response:
-        user = request.user
-        target = self.get_object()
-        serializer = TargetTopUpSerializer(data=request.data, instance=target)
+        user: User = request.user
+        target: Target = self.get_object()
+        serializer: TargetTopUpSerializer = TargetTopUpSerializer(
+            data=request.data, instance=target
+        )
         if serializer.is_valid():
             transaction = create_expense_transaction_now(
                 user=user,
@@ -89,6 +98,29 @@ class TargetViewSet(viewsets.ModelViewSet):
             change_balance = create_change_balance_now(
                 target=target,
                 amount=serializer.validated_data["amount"],
+            )
+            transaction.save()
+            change_balance.save()
+            return super().retrieve(request, *args, **kwargs)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=("PATCH",), detail=True, url_path="finish")
+    def finish(self, request: Request, *args, **kwargs) -> Response:
+        user: User = request.user
+        target: Target = self.get_object()
+        serializer: TargetFinishSerializer = TargetFinishSerializer(
+            data=request.data, instance=target
+        )
+        if serializer.is_valid():
+            transaction = create_income_transaction_now(
+                user=user,
+                category=target.category,
+                amount=serializer.validated_data["target_balance"],
+            )
+            change_balance = create_change_balance_now(
+                target=target,
+                amount=-serializer.validated_data["target_balance"],
             )
             transaction.save()
             change_balance.save()

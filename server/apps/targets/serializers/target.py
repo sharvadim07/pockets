@@ -93,6 +93,9 @@ class TargetCreateSerializer(serializers.ModelSerializer):
 
 
 class TargetTopUpSerializer(serializers.Serializer):
+    class Meta:
+        model = Target
+
     amount: models.DecimalField = models.DecimalField(
         verbose_name="Сумма пополнения",
         max_digits=10,
@@ -109,3 +112,18 @@ class TargetTopUpSerializer(serializers.Serializer):
         if amount > 0 and get_user_balance(user) < amount:
             raise serializers.ValidationError(TargetErrors.NOT_ENOUGH_BALANCE)
         return amount
+
+
+class TargetFinishSerializer(serializers.Serializer):
+    class Meta:
+        model = Target
+
+    def validate(self, attrs):
+        target: Target = self.instance
+        target_balance: Decimal = get_target_balance(target=target)
+        if target and target_balance < target.end_amount:
+            raise serializers.ValidationError(
+                TargetErrors.END_AMOUNT_NOT_ACHIEVED,
+            )
+        attrs["target_balance"] = target_balance
+        return super().validate(attrs)
