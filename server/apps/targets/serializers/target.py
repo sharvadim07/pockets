@@ -10,7 +10,6 @@ from apps.targets.logic.target_change_balance import get_target_balance
 from apps.targets.models.target import Target
 from dateutil.relativedelta import relativedelta
 from django.core.validators import MinValueValidator
-from django.db import models
 from rest_framework import serializers
 from rest_framework.fields import Field
 
@@ -96,16 +95,11 @@ class TargetTopUpSerializer(serializers.Serializer):
     class Meta:
         model = Target
 
-    amount: models.DecimalField = models.DecimalField(
-        verbose_name="Сумма пополнения",
+    amount: serializers.DecimalField = serializers.DecimalField(
         max_digits=10,
         decimal_places=2,
         validators=(MinValueValidator(Decimal("0.0")),),
     )
-
-    def validate(self, attrs):
-        attrs["amount"] = self.validate_amount(self.initial_data["amount"])
-        return super().validate(attrs)
 
     def validate_amount(self, amount: Decimal) -> Decimal:
         user = self.instance.user
@@ -127,3 +121,10 @@ class TargetFinishSerializer(serializers.Serializer):
             )
         attrs["target_balance"] = target_balance
         return super().validate(attrs)
+
+
+class TargetBalanceSerializer(serializers.Serializer):
+    balance: serializers.DecimalField = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )

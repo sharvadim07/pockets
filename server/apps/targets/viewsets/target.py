@@ -7,11 +7,15 @@ from apps.pockets.logic.transaction import (
 )
 from apps.pockets.models.transaction import Transaction
 from apps.targets.filters.target import TargetFilter
-from apps.targets.logic.target_change_balance import create_change_balance_now
+from apps.targets.logic.target_change_balance import (
+    create_change_balance_now,
+    get_target_balance,
+)
 from apps.targets.models.querysets.target import TargetQuerySet
 from apps.targets.models.target import Target
 from apps.targets.models.target_change_balance import TargetChangeBalance
 from apps.targets.serializers.target import (
+    TargetBalanceSerializer,
     TargetCreateSerializer,
     TargetFinishSerializer,
     TargetRetrieveSerializer,
@@ -47,6 +51,8 @@ class TargetViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
             serializer_class = TargetCreateSerializer
+        elif self.action == "balance":
+            serializer_class = TargetBalanceSerializer
         else:
             serializer_class = TargetRetrieveSerializer
         return serializer_class
@@ -56,9 +62,7 @@ class TargetViewSet(viewsets.ModelViewSet):
         # Check target balance an if it is lower than end amount
         # then create income transaction
         target: Target = self.get_object()
-        target_balance: Decimal = target.changes_balance.get_queryset().get_balance()[
-            "balance"
-        ]
+        target_balance: Decimal = get_target_balance(target=target)
         if target_balance < target.end_amount:
             new_transaction = create_income_transaction_now(
                 user=user,
@@ -81,6 +85,13 @@ class TargetViewSet(viewsets.ModelViewSet):
         )
         transaction.save()
         change_balance.save()
+
+    def get_object(self) -> Any:
+        if self.action == "balance":
+            target: Target = super().get_object()
+            return {"balance": get_target_balance(target=target)}
+        else:
+            return super().get_object()
 
     @action(methods=("PATCH",), detail=True, url_path="topup")
     def topup(self, request: Request, *args, **kwargs) -> Response:
@@ -127,3 +138,7 @@ class TargetViewSet(viewsets.ModelViewSet):
             return super().retrieve(request, *args, **kwargs)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=("GET",), detail=True, url_path="balance")
+    def balance(self, request: Request, *args, **kwargs) -> Response:
+        return super().retrieve(request, *args, **kwargs)
