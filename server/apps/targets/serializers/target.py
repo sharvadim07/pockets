@@ -2,19 +2,14 @@ from datetime import date
 from decimal import Decimal
 
 from apps.pockets.constants import TransactionErrors
-from apps.pockets.logic.transaction import (
-    create_expense_transaction_now,
-    get_user_balance,
-)
+from apps.pockets.logic.transaction import get_user_balance
 from apps.pockets.models import TransactionCategory
 from apps.pockets.serializers import TransactionCategorySerializer
 from apps.targets.constants.errors import TargetErrors
-from apps.targets.logic.target_change_balance import (
-    create_change_balance_now,
-    get_target_balance,
-)
+from apps.targets.logic.target_change_balance import get_target_balance
 from apps.targets.models.target import Target
 from dateutil.relativedelta import relativedelta
+from django.core.validators import MinValueValidator
 from rest_framework import serializers
 from rest_framework.fields import Field
 
@@ -93,18 +88,43 @@ class TargetCreateSerializer(serializers.ModelSerializer):
         validated_data["end_date"] = validated_data["start_date"] + relativedelta(
             months=+validated_data["term"],
         )
+        return super().create(validated_data)
 
-        target = super().create(validated_data)
 
-        transaction = create_expense_transaction_now(
-            user=user,
-            category=target.category,
-            amount=target.start_amount,
-        )
-        change_balance = create_change_balance_now(
-            target=target,
-            amount=target.start_amount,
-        )
-        transaction.save()
-        change_balance.save()
-        return target
+class TargetTopUpSerializer(serializers.Serializer):
+    class Meta:
+        model = Target
+
+    amount: serializers.DecimalField = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=(MinValueValidator(Decimal("0.0")),),
+    )
+
+    def validate_amount(self, amount: Decimal) -> Decimal:
+        user = self.instance.user
+        if amount > 0 and get_user_balance(user) < amount:
+            raise serializers.ValidationError(TargetErrors.NOT_ENOUGH_BALANCE)
+        return amount
+
+
+class TargetFinishSerializer(serializers.Serializer):
+    class Meta:
+        model = Target
+
+    def validate(self, attrs):
+        target: Target = self.instance
+        target_balance: Decimal = get_target_balance(target=target)
+        if target and target_balance < target.end_amount:
+            raise serializers.ValidationError(
+                TargetErrors.END_AMOUNT_NOT_ACHIEVED,
+            )
+        attrs["target_balance"] = target_balance
+        return super().validate(attrs)
+
+
+class TargetBalanceSerializer(serializers.Serializer):
+    balance: serializers.DecimalField = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
